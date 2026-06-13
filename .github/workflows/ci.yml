@@ -10,28 +10,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  frontend:
-    name: Build frontend
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: yarn
-          cache-dependency-path: frontend/yarn.lock
-      - name: Install deps
-        working-directory: frontend
-        run: yarn install --frozen-lockfile
-      - name: Build
-        working-directory: frontend
-        run: yarn build
-
-  engine:
-    # Spins up a throwaway Frappe bench (matching local: develop / Python 3.14)
-    # and runs the headless engine smoke test. If Frappe's develop branch shifts,
-    # the --frappe-branch / python-version pins below may need a bump.
-    name: Engine smoke test
+  test:
+    # Spins up a throwaway Frappe bench (matching local: develop / Python 3.14),
+    # installs the app, builds the Vue frontend, and runs the headless engine
+    # smoke test. The frontend is built inside the bench on purpose — socket.js
+    # reads the socket.io port from sites/common_site_config.json (frappe-ui
+    # convention), so it only resolves within a bench layout.
+    name: Build + engine smoke test
     runs-on: ubuntu-22.04
     services:
       mariadb:
@@ -79,10 +64,20 @@ jobs:
           bench set-config -g redis_socketio "redis://localhost:6379"
           bench set-config -g developer_mode 1
 
+      - name: Get app
+        working-directory: /home/runner/frappe-bench
+        run: bench get-app last_square_standing "${{ github.workspace }}/last_square_standing"
+
+      - name: Build frontend
+        # Inside the bench, so ../../../../sites/common_site_config.json resolves.
+        working-directory: /home/runner/frappe-bench/apps/last_square_standing/frontend
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
       - name: Create site + install app
         working-directory: /home/runner/frappe-bench
         run: |
-          bench get-app last_square_standing "${{ github.workspace }}/last_square_standing"
           bench new-site test.localhost \
             --mariadb-root-password root \
             --db-root-username root \
