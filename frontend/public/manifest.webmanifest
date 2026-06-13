@@ -1,0 +1,33 @@
+{
+  "name": "Last Square Standing",
+  "short_name": "LSS",
+  "description": "A multiplayer elimination grid game — pick a square no one else will.",
+  "id": "/lss/",
+  "start_url": "/lss/",
+  "scope": "/lss/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "categories": ["games"],
+  "icons": [
+    {
+      "src": "/assets/last_square_standing/frontend/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/last_square_standing/frontend/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/last_square_standing/frontend/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -259,3 +259,12 @@ require_type_annotated_api_methods = True
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+
+
+# Website
+# ----------------------------------
+# Serve the "Last Square Standing" single-page app at /lss and all sub-routes
+# (vue-router history mode). The built index lands at www/lss.html.
+website_route_rules = [
+	{"from_route": "/lss/<path:app_path>", "to_route": "lss"},
+]

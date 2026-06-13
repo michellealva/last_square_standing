@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "room",
+  "room_code",
+  "round_number",
+  "grid_size",
+  "status",
+  "duration",
+  "started_at",
+  "deadline",
+  "resolved",
+  "prompt",
+  "labels",
+  "reveal_data"
+ ],
+ "fields": [
+  {
+   "fieldname": "room",
+   "fieldtype": "Link",
+   "label": "Room",
+   "options": "LSS Room"
+  },
+  {
+   "fieldname": "room_code",
+   "fieldtype": "Data",
+   "label": "Room Code"
+  },
+  {
+   "fieldname": "round_number",
+   "fieldtype": "Int",
+   "label": "Round Number"
+  },
+  {
+   "fieldname": "grid_size",
+   "fieldtype": "Int",
+   "label": "Grid Size"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nResolved"
+  },
+  {
+   "default": "10",
+   "fieldname": "duration",
+   "fieldtype": "Int",
+   "label": "Duration"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At"
+  },
+  {
+   "fieldname": "deadline",
+   "fieldtype": "Datetime",
+   "label": "Deadline"
+  },
+  {
+   "default": "0",
+   "fieldname": "resolved",
+   "fieldtype": "Check",
+   "label": "Resolved"
+  },
+  {
+   "fieldname": "prompt",
+   "fieldtype": "Data",
+   "label": "Prompt"
+  },
+  {
+   "fieldname": "labels",
+   "fieldtype": "Long Text",
+   "label": "Labels"
+  },
+  {
+   "fieldname": "reveal_data",
+   "fieldtype": "Long Text",
+   "label": "Reveal Data"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Last Square Standing",
+ "name": "LSS Round",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

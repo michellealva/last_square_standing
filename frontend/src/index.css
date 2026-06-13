@@ -1,0 +1,42 @@
+@import 'frappe-ui/style.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #0b1020;
+  color: #e7ecf5;
+  -webkit-tap-highlight-color: transparent;
+  font-feature-settings: 'tnum';
+}
+
+.lss-bg {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, 0.25), transparent 60%),
+    radial-gradient(1000px 500px at 110% 10%, rgba(236, 72, 153, 0.18), transparent 55%),
+    linear-gradient(180deg, #0b1020 0%, #0a0f1e 100%);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Accessibility: kill the juicy animations for users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-shake,
+  .animate-explode,
+  .animate-tickpulse,
+  .animate-confetti-fall,
+  .animate-floaty,
+  .animate-pop {
+    animation: none !important;
+  }
+}

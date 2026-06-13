@@ -1,0 +1,64 @@
+{
+ "actions": [],
+ "autoname": "field:username",
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "username",
+  "total_score",
+  "games_played",
+  "wins"
+ ],
+ "fields": [
+  {
+   "fieldname": "username",
+   "fieldtype": "Data",
+   "label": "Username",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_score",
+   "fieldtype": "Int",
+   "label": "Total Score"
+  },
+  {
+   "default": "0",
+   "fieldname": "games_played",
+   "fieldtype": "Int",
+   "label": "Games Played"
+  },
+  {
+   "default": "0",
+   "fieldname": "wins",
+   "fieldtype": "Int",
+   "label": "Wins"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Last Square Standing",
+ "name": "LSS Leaderboard",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
