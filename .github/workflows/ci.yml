@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - name: Install deps
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - name: Build
+        working-directory: frontend
+        run: yarn build
+
+  engine:
+    # Spins up a throwaway Frappe bench (matching local: develop / Python 3.14)
+    # and runs the headless engine smoke test. If Frappe's develop branch shifts,
+    # the --frappe-branch / python-version pins below may need a bump.
+    name: Engine smoke test
+    runs-on: ubuntu-22.04
+    services:
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - name: Checkout app
+        uses: actions/checkout@v4
+        with:
+          path: last_square_standing
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install bench
+        run: pip install frappe-bench
+
+      - name: Init bench (Frappe develop)
+        run: |
+          bench init --skip-redis-config-generation --skip-assets \
+            --python "$(which python)" --frappe-branch develop ~/frappe-bench
+
+      - name: Point bench at CI services
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench set-config -g db_host 127.0.0.1
+          bench set-config -g db_port 3306
+          bench set-config -g redis_cache "redis://localhost:6379"
+          bench set-config -g redis_queue "redis://localhost:6379"
+          bench set-config -g redis_socketio "redis://localhost:6379"
+          bench set-config -g developer_mode 1
+
+      - name: Create site + install app
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench get-app last_square_standing "${{ github.workspace }}/last_square_standing"
+          bench new-site test.localhost \
+            --mariadb-root-password root \
+            --db-root-username root \
+            --admin-password admin \
+            --no-mariadb-socket
+          bench --site test.localhost install-app last_square_standing
+          bench --site test.localhost migrate
+
+      - name: Run engine smoke test
+        working-directory: /home/runner/frappe-bench
+        run: bench --site test.localhost execute last_square_standing.sim.run
