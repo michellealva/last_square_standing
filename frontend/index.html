@@ -18,6 +18,21 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="LSS" />
     <link rel="apple-touch-icon" href="/assets/last_square_standing/frontend/icons/apple-touch-icon-180.png" />
+
+    <!-- CSRF token for API calls. Frappe's template renderer replaces the comment
+         below with `<script>frappe.csrf_token = "..."</script>`. We stub
+         `window.frappe` first (no desk JS here), then mirror a *real* token to
+         `window.csrf_token`, which frappe-ui's request layer reads. When the
+         session has no token (anonymous guest) it renders "None", which we ignore
+         so frappe-ui sends nothing and the server skips CSRF. This fixes the 400
+         "Invalid Request" that happens when a session already has a token. -->
+    <script>window.frappe = window.frappe || {};</script>
+    <!-- csrf_token -->
+    <script>
+      if (window.frappe.csrf_token && window.frappe.csrf_token !== "None") {
+        window.csrf_token = window.frappe.csrf_token;
+      }
+    </script>
   </head>
   <body class="h-full">
     <div id="app" class="h-full"></div>
