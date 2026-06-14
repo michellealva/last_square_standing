@@ -60,5 +60,18 @@ bench build
 > PWA install requires a secure context — serve the site over **HTTPS** in production.
 > After every frontend rebuild, run `bench --site <site> clear-website-cache` so clients pick up the new bundle.
 
+## Frappe Cloud
+The built frontend isn't committed, so it must be built on deploy. The root
+`package.json` provides the `build` / `postinstall` scripts Frappe Cloud runs to build
+the Vue SPA into `www/lss.html` + `public/frontend/` during deploy — no manual step
+needed. (If a deploy ever serves a blank `/lss`, check the FC build log for the
+frontend build.)
+
+- **Frappe version:** runs on **version-15** (stable, recommended) or **Nightly/develop**.
+  CI tests both.
+- The game is served at **`/lss`**. There's no desk workspace by design — the DocTypes
+  (`LSS Room`, etc.) are still reachable under `/app` if you need them.
+- Serve over **HTTPS** so the PWA installs and realtime sockets work.
+
 ## License
 MIT

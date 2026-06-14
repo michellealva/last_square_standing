@@ -11,13 +11,22 @@ concurrency:
 
 jobs:
   test:
-    # Spins up a throwaway Frappe bench (matching local: develop / Python 3.14),
-    # installs the app, builds the Vue frontend, and runs the headless engine
-    # smoke test. The frontend is built inside the bench on purpose — socket.js
-    # reads the socket.io port from sites/common_site_config.json (frappe-ui
-    # convention), so it only resolves within a bench layout.
-    name: Build + engine smoke test
+    # Spins up a throwaway Frappe bench, installs the app, builds the Vue frontend,
+    # and runs the headless engine smoke test. Runs on both the stable hosting
+    # target (version-15) and the local dev branch (develop). The frontend is built
+    # inside the bench on purpose — socket.js reads the socket.io port from
+    # sites/common_site_config.json (frappe-ui convention), which only resolves
+    # within a bench layout.
+    name: Frappe ${{ matrix.frappe-branch }}
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - frappe-branch: version-15
+            python-version: "3.11"
+          - frappe-branch: develop
+            python-version: "3.14"
     services:
       mariadb:
         image: mariadb:10.6
@@ -40,7 +49,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: ${{ matrix.python-version }}
 
       - uses: actions/setup-node@v4
         with:
@@ -49,10 +58,10 @@ jobs:
       - name: Install bench
         run: pip install frappe-bench
 
-      - name: Init bench (Frappe develop)
+      - name: Init bench (Frappe ${{ matrix.frappe-branch }})
         run: |
           bench init --skip-redis-config-generation --skip-assets \
-            --python "$(which python)" --frappe-branch develop ~/frappe-bench
+            --python "$(which python)" --frappe-branch ${{ matrix.frappe-branch }} ~/frappe-bench
 
       - name: Point bench at CI services
         working-directory: /home/runner/frappe-bench
