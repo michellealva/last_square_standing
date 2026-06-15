@@ -12,6 +12,7 @@
   "host_name",
   "current_round",
   "grid_size",
+  "start_grid",
   "winner_name",
   "players",
   "last_reveal"
@@ -57,6 +58,12 @@
    "fieldname": "grid_size",
    "fieldtype": "Int",
    "label": "Grid Size"
+  },
+  {
+   "default": "0",
+   "fieldname": "start_grid",
+   "fieldtype": "Int",
+   "label": "Start Grid"
   },
   {
    "fieldname": "winner_name",

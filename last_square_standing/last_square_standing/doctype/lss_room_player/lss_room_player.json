@@ -11,7 +11,11 @@
   "eliminated",
   "place",
   "points",
-  "connected"
+  "connected",
+  "is_bot",
+  "abilities",
+  "shield_round",
+  "wins"
  ],
  "fields": [
   {
@@ -56,6 +60,28 @@
    "fieldname": "connected",
    "fieldtype": "Check",
    "label": "Connected"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_bot",
+   "fieldtype": "Check",
+   "label": "Is Bot"
+  },
+  {
+   "fieldname": "abilities",
+   "fieldtype": "Small Text",
+   "label": "Abilities"
+  },
+  {
+   "fieldname": "shield_round",
+   "fieldtype": "Data",
+   "label": "Shield Round"
+  },
+  {
+   "default": "0",
+   "fieldname": "wins",
+   "fieldtype": "Int",
+   "label": "Wins"
   }
  ],
  "index_web_pages_for_search": 1,

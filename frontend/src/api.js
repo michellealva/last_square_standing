@@ -20,5 +20,12 @@ export const api = {
     call(M + 'play_again', { room_code, player_token }),
   leaveRoom: (room_code, player_token) =>
     call(M + 'leave_room', { room_code, player_token }),
-  getLeaderboard: (limit = 10) => call(M + 'get_leaderboard', { limit }),
+  addBots: (room_code, player_token, count) =>
+    call(M + 'add_bots', { room_code, player_token, count }),
+  removeBot: (room_code, player_token, bot_name) =>
+    call(M + 'remove_bot', { room_code, player_token, bot_name }),
+  sendReaction: (room_code, player_token, emoji) =>
+    call(M + 'send_reaction', { room_code, player_token, emoji }),
+  useAbility: (room_code, player_token, ability, target_square) =>
+    call(M + 'use_ability', { room_code, player_token, ability, target_square }),
 }

@@ -11,7 +11,8 @@ declare module 'vue' {
     Confetti: typeof import('./src/components/Confetti.vue')['default']
     CountdownRing: typeof import('./src/components/CountdownRing.vue')['default']
     Grid: typeof import('./src/components/Grid.vue')['default']
-    Leaderboard: typeof import('./src/components/Leaderboard.vue')['default']
+    ReactionBar: typeof import('./src/components/ReactionBar.vue')['default']
+    Reactions: typeof import('./src/components/Reactions.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

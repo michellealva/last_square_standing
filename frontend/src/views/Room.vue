@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto flex min-h-full max-w-md flex-col px-4 py-5" :class="{ 'animate-shake': shaking }">
+    <Reactions :reactions="reactions" />
     <!-- Top bar -->
     <div class="mb-4 flex items-center justify-between">
       <button class="text-sm text-slate-400 hover:text-white" @click="goHome">
@@ -61,14 +62,42 @@
             :key="p.username"
             class="flex animate-pop items-center gap-3 rounded-xl bg-slate-900/50 px-3 py-2.5 ring-1 ring-white/5"
           >
-            <span class="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-pink-500 text-xs font-bold">
-              {{ initials(p.username) }}
+            <span
+              class="grid h-8 w-8 place-items-center rounded-full text-xs font-bold"
+              :class="p.is_bot ? 'bg-slate-700' : 'bg-gradient-to-br from-indigo-500 to-pink-500'"
+            >
+              {{ p.is_bot ? '🤖' : initials(p.username) }}
             </span>
             <span class="flex-1 font-medium">{{ p.username }}</span>
+            <span v-if="p.wins" class="text-xs text-amber-300" title="Wins this room">🏆 {{ p.wins }}</span>
             <span v-if="p.is_host" class="text-xs font-semibold text-amber-400">HOST</span>
-            <span v-if="isMe(p)" class="text-xs text-indigo-300">you</span>
+            <span v-else-if="isMe(p)" class="text-xs text-indigo-300">you</span>
+            <button
+              v-if="p.is_bot && amHost"
+              class="text-slate-500 hover:text-rose-300"
+              title="Remove bot"
+              @click="kickBot(p.username)"
+            >
+              ✕
+            </button>
           </li>
         </ul>
+
+        <!-- Add bots (host) -->
+        <div v-if="amHost && state.player_count < state.max_players" class="mt-3 flex items-center gap-2">
+          <div class="flex items-center rounded-xl bg-slate-900/50 ring-1 ring-white/10">
+            <button class="px-3 py-2 text-lg text-slate-300 active:scale-90" @click="botCount = Math.max(1, botCount - 1)">−</button>
+            <span class="w-6 text-center text-sm font-bold">{{ botCount }}</span>
+            <button class="px-3 py-2 text-lg text-slate-300 active:scale-90" @click="botCount = Math.min(state.max_players - state.player_count, botCount + 1)">+</button>
+          </div>
+          <button
+            class="flex-1 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/10 transition active:scale-[0.98] disabled:opacity-50"
+            :disabled="busy"
+            @click="addBots"
+          >
+            🤖 Add {{ botCount }} bot{{ botCount === 1 ? '' : 's' }}
+          </button>
+        </div>
       </div>
 
       <div class="mt-4">
@@ -101,6 +130,10 @@
       </div>
 
       <div class="flex flex-1 flex-col justify-center">
+        <p v-if="modifierBanner" class="mb-2 animate-pop rounded-xl bg-fuchsia-500/15 px-4 py-2 text-center text-sm font-semibold text-fuchsia-200 ring-1 ring-fuchsia-400/30">
+          {{ modifierBanner }}
+        </p>
+
         <div
           v-if="amEliminated"
           class="mb-4 animate-pop rounded-xl bg-slate-700/40 px-4 py-3 text-center text-sm font-semibold text-slate-200 ring-1 ring-white/10"
@@ -111,8 +144,11 @@
           <p v-if="round.prompt" class="mb-1 text-center text-base font-bold text-white">
             {{ round.prompt }}
           </p>
-          <p class="mb-4 text-center text-sm text-slate-300">
-            <template v-if="mySquare >= 0">✓ Locked in. Tap another to change.</template>
+          <p class="mb-3 text-center text-sm" :class="armed ? 'text-fuchsia-300' : 'text-slate-300'">
+            <template v-if="armed === 'bomb'">💣 Tap a tile to bomb it.</template>
+            <template v-else-if="armed === 'peek'">👁️ Tap a tile to peek at it.</template>
+            <template v-else-if="peekResult">👁️ That tile has {{ peekResult.count }} player(s).</template>
+            <template v-else-if="mySquare >= 0">✓ Locked in. Tap another to change.</template>
             <template v-else>Pick one no one else will!</template>
           </p>
         </template>
@@ -122,15 +158,35 @@
           mode="select"
           :my-square="mySquare"
           :labels="round.labels"
+          :frozen="modData.frozen || []"
+          :bonus-square="modData.bonus ?? -1"
           :disabled="amEliminated || busy"
           :class="amEliminated ? 'pointer-events-none opacity-40' : ''"
           @pick="pick"
         />
 
-        <p class="mt-5 text-center text-sm text-slate-400">
+        <!-- Abilities -->
+        <div v-if="!amEliminated" class="mt-4 flex justify-center gap-2">
+          <button
+            v-for="a in ['shield', 'peek', 'bomb']"
+            :key="a"
+            class="flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold ring-1 transition active:scale-95 disabled:opacity-40"
+            :class="armed === a
+              ? 'bg-fuchsia-500/30 ring-fuchsia-300 text-white'
+              : 'bg-white/5 ring-white/10 text-slate-200'"
+            :disabled="(abilities[a] || 0) <= 0"
+            @click="tapAbility(a)"
+          >
+            {{ abilityIcon[a] }} {{ abilityLabel[a] }}
+          </button>
+        </div>
+
+        <p class="mt-4 text-center text-sm text-slate-400">
           {{ round.submitted_count }} of {{ state.alive_count }} players locked in
         </p>
       </div>
+
+      <ReactionBar :emojis="REACTION_EMOJIS" @react="react" />
     </div>
 
     <!-- REVEAL -->
@@ -170,7 +226,9 @@
           mode="reveal"
           :selections="reveal.selections"
           :exploded-squares="reveal.exploded_squares"
+          :bombed-squares="reveal.bombed_squares || []"
           :tiebreak-square="reveal.tiebreak ? reveal.tiebreak_square : -1"
+          :bonus-square="reveal.bonus_square ?? -1"
           :labels="reveal.labels || []"
         />
 
@@ -190,7 +248,19 @@
             <p v-else class="text-sm text-slate-100">{{ reveal.eliminated.join(', ') }}</p>
           </div>
         </div>
+
+        <p v-if="reveal.shielded && reveal.shielded.length" class="mt-3 text-center text-sm text-sky-300">
+          🛡️ {{ reveal.shielded.join(', ') }} blocked an explosion!
+        </p>
+        <p v-if="reveal.bombed_squares && reveal.bombed_squares.length" class="mt-1 text-center text-sm text-rose-300">
+          💣 A bomb went off!
+        </p>
+        <p v-if="reveal.bonus_winner" class="mt-1 text-center text-sm text-amber-300">
+          ⭐ {{ reveal.bonus_winner }} grabbed the bonus tile!
+        </p>
       </div>
+
+      <ReactionBar :emojis="REACTION_EMOJIS" @react="react" />
     </div>
 
     <!-- WINNER -->
@@ -213,6 +283,9 @@
           >
             <span class="w-6 text-center text-lg">{{ medal(r.place) }}</span>
             <span class="flex-1 font-medium">{{ r.username }}</span>
+            <span v-if="winsFor(r.username)" class="text-xs text-amber-300" title="Wins this room">
+              🏆 {{ winsFor(r.username) }}
+            </span>
             <span class="text-sm font-bold text-indigo-200">+{{ r.points }}</span>
           </li>
         </ol>
@@ -260,32 +333,58 @@ import { api } from '@/api'
 import Grid from '@/components/Grid.vue'
 import CountdownRing from '@/components/CountdownRing.vue'
 import Confetti from '@/components/Confetti.vue'
+import Reactions from '@/components/Reactions.vue'
+import ReactionBar from '@/components/ReactionBar.vue'
 import { muted, toggleMute, playPick, playTick, playExplosion, playWin } from '@/sound'
+
+const abilityIcon = { shield: '🛡️', peek: '👁️', bomb: '💣' }
+const abilityLabel = { shield: 'Shield', peek: 'Peek', bomb: 'Bomb' }
 
 const props = defineProps({ roomCode: { type: String, required: true } })
 const router = useRouter()
 
 const game = useGame(props.roomCode)
-const { state, error, phase, round, secondsLeft, playerToken } = game
+const { state, error, phase, round, secondsLeft, playerToken, reactions, react } = game
 const roomCode = game.roomCode
+
+const REACTION_EMOJIS = ['👍', '😂', '😮', '🔥', '💀', '👀']
 
 const busy = ref(false)
 const copied = ref(false)
 const mySquare = ref(-1)
 const shaking = ref(false)
+const botCount = ref(2)
+const armed = ref(null) // null | 'bomb' | 'peek' — next tile tap targets this ability
+const peekResult = ref(null) // { square, count }
 
 const reveal = computed(() => state.value?.reveal || null)
 const me = computed(() => state.value?.me || null)
 const amHost = computed(() => !!me.value?.is_host)
 const amEliminated = computed(() => !!me.value?.eliminated)
+const abilities = computed(() => me.value?.abilities || {})
+const modifier = computed(() => round.value?.modifier || null)
+const modData = computed(() => round.value?.modifier_data || {})
+const modifierBanner = computed(() => {
+  if (modifier.value === 'frozen') return '❄️ Frozen Tiles — some tiles are locked!'
+  if (modifier.value === 'bonus') return '⭐ Bonus Tile — land alone on the star for points!'
+  if (modifier.value === 'sudden_death') return '⚡ Sudden Death — shorter timer!'
+  return null
+})
+
+function winsFor(username) {
+  const p = (state.value?.players || []).find((x) => x.username === username)
+  return p ? p.wins || 0 : 0
+}
 
 onMounted(() => game.start())
 
-// Reset my pick whenever a fresh round begins.
+// Reset my pick (and any armed ability) whenever a fresh round begins.
 watch(
   () => round.value && round.value.round_number + '-' + round.value.started_at,
   () => {
     mySquare.value = -1
+    armed.value = null
+    peekResult.value = null
   },
 )
 
@@ -324,6 +423,9 @@ watch(phase, (now, before) => {
 
 async function pick(index) {
   if (busy.value || amEliminated.value) return
+  // If an ability is armed, the tile tap targets it instead of selecting.
+  if (armed.value === 'bomb') return runAbility('bomb', index)
+  if (armed.value === 'peek') return runAbility('peek', index)
   navigator.vibrate?.(10)
   playPick()
   const prev = mySquare.value
@@ -332,6 +434,46 @@ async function pick(index) {
     await api.submitSelection(roomCode, playerToken.value, index)
   } catch (e) {
     mySquare.value = prev
+    error.value = cleanErr(e)
+  }
+}
+
+function tapAbility(ability) {
+  if ((abilities.value[ability] || 0) <= 0 || amEliminated.value) return
+  if (ability === 'shield') return runAbility('shield')
+  // bomb / peek need a target — arm (or disarm) tile-tap mode.
+  armed.value = armed.value === ability ? null : ability
+  peekResult.value = null
+}
+
+async function runAbility(ability, target_square) {
+  armed.value = null
+  navigator.vibrate?.(15)
+  try {
+    const res = await api.useAbility(roomCode, playerToken.value, ability, target_square)
+    if (ability === 'peek') peekResult.value = { square: res.square, count: res.count }
+    if (ability === 'bomb') playExplosion()
+    game.refresh()
+  } catch (e) {
+    error.value = cleanErr(e)
+  }
+}
+
+async function addBots() {
+  busy.value = true
+  try {
+    game.applyState(await api.addBots(roomCode, playerToken.value, botCount.value))
+  } catch (e) {
+    error.value = cleanErr(e)
+  } finally {
+    busy.value = false
+  }
+}
+
+async function kickBot(name) {
+  try {
+    game.applyState(await api.removeBot(roomCode, playerToken.value, name))
+  } catch (e) {
     error.value = cleanErr(e)
   }
 }

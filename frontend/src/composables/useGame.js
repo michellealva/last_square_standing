@@ -26,6 +26,21 @@ export function useGame(roomCode) {
   const tokenKey = `lss_token_${roomCode}`
   const playerToken = ref(localStorage.getItem(tokenKey) || null)
 
+  // Floating emoji reactions (ephemeral, realtime).
+  const reactions = ref([])
+  let reactionSeq = 0
+  function onReaction(r) {
+    if (!r || !r.emoji) return
+    const id = ++reactionSeq
+    reactions.value.push({ id, username: r.username, emoji: r.emoji })
+    setTimeout(() => {
+      reactions.value = reactions.value.filter((x) => x.id !== id)
+    }, 2600)
+  }
+  function react(emoji) {
+    api.sendReaction(roomCode, playerToken.value, emoji).catch(() => {})
+  }
+
   function setToken(t) {
     playerToken.value = t
     if (t) localStorage.setItem(tokenKey, t)
@@ -96,6 +111,7 @@ export function useGame(roomCode) {
     try {
       socket = initSocket()
       socket.on(`lss:${roomCode}`, applyState)
+      socket.on(`lss:${roomCode}:reaction`, onReaction)
     } catch (e) {
       // realtime optional; poll covers it
     }
@@ -109,6 +125,7 @@ export function useGame(roomCode) {
   function stop() {
     if (socket) {
       socket.off(`lss:${roomCode}`, applyState)
+      socket.off(`lss:${roomCode}:reaction`, onReaction)
       socket.disconnect()
     }
     clearInterval(pollTimer)
@@ -131,6 +148,8 @@ export function useGame(roomCode) {
     start,
     stop,
     serverNow,
+    reactions,
+    react,
   }
 }
 

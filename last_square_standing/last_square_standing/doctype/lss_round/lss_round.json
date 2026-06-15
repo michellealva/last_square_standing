@@ -15,6 +15,9 @@
   "resolved",
   "prompt",
   "labels",
+  "modifier",
+  "modifier_data",
+  "bombs",
   "reveal_data"
  ],
  "fields": [
@@ -77,6 +80,21 @@
    "fieldname": "labels",
    "fieldtype": "Long Text",
    "label": "Labels"
+  },
+  {
+   "fieldname": "modifier",
+   "fieldtype": "Data",
+   "label": "Modifier"
+  },
+  {
+   "fieldname": "modifier_data",
+   "fieldtype": "Small Text",
+   "label": "Modifier Data"
+  },
+  {
+   "fieldname": "bombs",
+   "fieldtype": "Small Text",
+   "label": "Bombs"
   },
   {
    "fieldname": "reveal_data",

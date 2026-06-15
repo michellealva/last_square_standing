@@ -57,6 +57,11 @@ export default {
             opacity: '0',
           },
         },
+        'float-up': {
+          '0%': { transform: 'translateY(0) scale(0.6)', opacity: '0' },
+          '15%': { transform: 'translateY(-10px) scale(1.1)', opacity: '1' },
+          '100%': { transform: 'translateY(-60vh) scale(1)', opacity: '0' },
+        },
       },
       animation: {
         explode: 'explode 0.6s ease-in-out',
@@ -65,6 +70,7 @@ export default {
         shake: 'shake 0.5s ease-in-out',
         tickpulse: 'tickpulse 1s ease-in-out infinite',
         'confetti-fall': 'confetti-fall linear forwards',
+        'float-up': 'float-up 2.6s ease-out forwards',
       },
     },
   },

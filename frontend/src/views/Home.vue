@@ -120,19 +120,15 @@
       </ul>
     </div>
 
-    <!-- Leaderboard (only once at least one game has been recorded) -->
-    <Leaderboard v-if="board.length" class="mt-5" :rows="board" />
-
-    <p class="mt-6 text-center text-xs text-slate-600">3–10 players · built on Frappe</p>
+    <p class="mt-6 text-center text-xs text-slate-600">3–16 players · built on Frappe</p>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api'
 import { cleanErr } from '@/composables/useGame'
-import Leaderboard from '@/components/Leaderboard.vue'
 
 const router = useRouter()
 const mode = ref(null) // null | 'create' | 'join'
@@ -141,16 +137,7 @@ const roomName = ref('')
 const code = ref('')
 const error = ref('')
 const busy = ref(false)
-const board = ref([])
 const nameInput = ref(null)
-
-onMounted(async () => {
-  try {
-    board.value = await api.getLeaderboard(8)
-  } catch (e) {
-    /* ignore */
-  }
-})
 
 function setMode(m) {
   mode.value = m

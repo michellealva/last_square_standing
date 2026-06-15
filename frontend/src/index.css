@@ -36,6 +36,7 @@ body {
   .animate-tickpulse,
   .animate-confetti-fall,
   .animate-floaty,
+  .animate-float-up,
   .animate-pop {
     animation: none !important;
   }
